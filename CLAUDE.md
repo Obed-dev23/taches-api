@@ -22,8 +22,9 @@ Une application de gestion de tâches en trois parties partageant les mêmes don
 ## Où on en est
 
 - Outils installés sur sa machine : Node.js, npm, Git (installé via winget), Visual Studio Code.
-- Fait : projet cloné dans `C:\Users\ntomb\taches-api`, `npm install` et `npm run dev` fonctionnent chez lui.
-- Prochaine étape : ouvrir le projet dans VS Code et lire `src/app.ts` ligne par ligne ensemble.
+- Copie de travail à utiliser : `C:\Users\ntomb\Documents\GitHub\taches-api`, ouverte dans VS Code (utiliser le terminal intégré de VS Code). Une ancienne copie dans `C:\Users\ntomb\taches-api` est à abandonner.
+- Fait : `npm run dev` fonctionne chez lui, l'API répond dans le navigateur.
+- Prochaine étape : lire `src/app.ts` ligne par ligne ensemble. Le bloc `type Tache` a déjà été expliqué ; reprendre au bloc suivant (tableau `taches` et `prochainId`).
 - Exercice en attente : ajouter une route `DELETE /taches/:id` en s'inspirant de la route `PATCH`.
 - Ensuite : remplacer le stockage en mémoire par PostgreSQL.
 
