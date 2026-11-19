@@ -24,7 +24,10 @@ Une application de gestion de tâches en trois parties partageant les mêmes don
 - Outils installés sur sa machine : Node.js, npm, Git (installé via winget), Visual Studio Code.
 - Copie de travail à utiliser : `C:\Users\ntomb\Documents\GitHub\taches-api`, ouverte dans VS Code (utiliser le terminal intégré de VS Code). Une ancienne copie dans `C:\Users\ntomb\taches-api` est à abandonner.
 - Fait : `npm run dev` fonctionne chez lui, l'API répond dans le navigateur.
-- Prochaine étape : lire `src/app.ts` ligne par ligne ensemble. Le bloc `type Tache` a déjà été expliqué ; reprendre au bloc suivant (tableau `taches` et `prochainId`).
+- Lecture de `src/app.ts` : expliqués jusqu'à la route GET (ligne 20). Reste la route POST (à découper en petits morceaux) puis PATCH.
+- Il a écrit lui-même sa première route `GET /bonjour` dans sa copie locale (pas encore commitée ni poussée sur GitHub ; lui apprendre `git commit`/`push` le moment venu).
+- Défi proposé : route `GET /bonjour/:prenom` avec paramètre et template string.
+- Pièges déjà rencontrés : port 3000 occupé par un ancien serveur (EADDRINUSE), fichier non enregistré (rond blanc dans VS Code).
 - Exercice en attente : ajouter une route `DELETE /taches/:id` en s'inspirant de la route `PATCH`.
 - Ensuite : remplacer le stockage en mémoire par PostgreSQL.
 
