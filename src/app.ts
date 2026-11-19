@@ -1,47 +1,88 @@
+import { zValidator } from "@hono/zod-validator";
+import { asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { z } from "zod";
+import type { Db } from "./db/client.js";
+import { taches } from "./db/schema.js";
 
-// Équivalent d'un "record" Java : la forme d'une tâche.
-// En TypeScript, un type décrit une structure ; il n'y a pas de classe à instancier.
-export type Tache = {
-  id: number;
-  titre: string;
-  terminee: boolean;
-};
-
-// Stockage en mémoire pour l'instant (comme une List<Tache> en Java).
-// On le remplacera par PostgreSQL à l'étape suivante.
-const taches: Tache[] = [];
-let prochainId = 1;
-
-// Équivalent d'un @RestController Spring : on y déclare les routes.
-export const app = new Hono();
-
-// GET /taches : renvoie toutes les tâches.
-app.get("/taches", (c) => c.json(taches));
-
-// POST /taches : crée une tâche à partir du JSON reçu.
-app.post("/taches", async (c) => {
-  const corps = await c.req.json().catch(() => null);
-  const titre = typeof corps?.titre === "string" ? corps.titre.trim() : "";
-
-  if (titre === "") {
-    return c.json({ erreur: "Le champ 'titre' est obligatoire." }, 400);
-  }
-
-  const tache: Tache = { id: prochainId++, titre, terminee: false };
-  taches.push(tache);
-  return c.json(tache, 201);
+// Règles de validation, équivalent de Bean Validation (@NotBlank, @Size...).
+const schemaCreation = z.object({
+  titre: z.string().trim().min(1, "Le titre est obligatoire.").max(200),
 });
 
-// PATCH /taches/:id/terminer : marque une tâche comme terminée.
-app.patch("/taches/:id/terminer", (c) => {
-  const id = Number(c.req.param("id"));
-  const tache = taches.find((t) => t.id === id);
+const schemaModification = z
+  .object({
+    titre: z.string().trim().min(1).max(200).optional(),
+    terminee: z.boolean().optional(),
+  })
+  .refine((d) => d.titre !== undefined || d.terminee !== undefined, {
+    message: "Rien à modifier : envoyez 'titre' et/ou 'terminee'.",
+  });
 
-  if (!tache) {
-    return c.json({ erreur: `Tâche ${id} introuvable.` }, 404);
-  }
+const schemaId = z.object({ id: z.coerce.number().int().positive() });
 
-  tache.terminee = true;
-  return c.json(tache);
-});
+// En cas de données invalides, renvoie une erreur 400 lisible.
+const valider = <T extends z.ZodType>(cible: "json" | "param", schema: T) =>
+  zValidator(cible, schema, (resultat, c) => {
+    if (!resultat.success) {
+      return c.json({ erreur: resultat.error.issues.map((i) => i.message).join(" ") }, 400);
+    }
+  });
+
+// La base est passée en paramètre : c'est de l'injection de dépendances,
+// comme un constructeur @Autowired en Spring. Les tests y passent une base vide.
+export function creerApp(db: Db) {
+  const app = new Hono();
+
+  // Autorise le futur site web (sur une autre adresse) à appeler l'API.
+  app.use("*", cors());
+
+  // GET /taches : liste toutes les tâches.
+  app.get("/taches", async (c) => {
+    const liste = await db.select().from(taches).orderBy(asc(taches.id));
+    return c.json(liste);
+  });
+
+  // GET /taches/:id : renvoie une tâche.
+  app.get("/taches/:id", valider("param", schemaId), async (c) => {
+    const { id } = c.req.valid("param");
+    const [tache] = await db.select().from(taches).where(eq(taches.id, id));
+    return tache ? c.json(tache) : c.json(introuvable(id), 404);
+  });
+
+  // POST /taches : crée une tâche.
+  app.post("/taches", valider("json", schemaCreation), async (c) => {
+    const { titre } = c.req.valid("json");
+    const [tache] = await db.insert(taches).values({ titre }).returning();
+    return c.json(tache, 201);
+  });
+
+  // PATCH /taches/:id : modifie le titre et/ou l'état d'une tâche.
+  app.patch(
+    "/taches/:id",
+    valider("param", schemaId),
+    valider("json", schemaModification),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const modifications = c.req.valid("json");
+      const [tache] = await db
+        .update(taches)
+        .set(modifications)
+        .where(eq(taches.id, id))
+        .returning();
+      return tache ? c.json(tache) : c.json(introuvable(id), 404);
+    },
+  );
+
+  // DELETE /taches/:id : supprime une tâche.
+  app.delete("/taches/:id", valider("param", schemaId), async (c) => {
+    const { id } = c.req.valid("param");
+    const [tache] = await db.delete(taches).where(eq(taches.id, id)).returning();
+    return tache ? c.body(null, 204) : c.json(introuvable(id), 404);
+  });
+
+  return app;
+}
+
+const introuvable = (id: number) => ({ erreur: `Tâche ${id} introuvable.` });

@@ -1,0 +1,39 @@
+# Requêtes de test pour l'API.
+# Avec l'extension VS Code "REST Client" (auteur : Huachao Mao), un lien
+# "Send Request" apparaît au-dessus de chaque requête : cliquez dessus.
+# Le serveur doit tourner (npm run dev).
+
+@api = http://localhost:3000
+
+### Lister les tâches
+GET {{api}}/taches
+
+### Créer une tâche
+POST {{api}}/taches
+Content-Type: application/json
+
+{ "titre": "Apprendre Drizzle" }
+
+### Lire la tâche 1
+GET {{api}}/taches/1
+
+### Marquer la tâche 1 comme terminée
+PATCH {{api}}/taches/1
+Content-Type: application/json
+
+{ "terminee": true }
+
+### Renommer la tâche 1
+PATCH {{api}}/taches/1
+Content-Type: application/json
+
+{ "titre": "Maîtriser Drizzle" }
+
+### Supprimer la tâche 1
+DELETE {{api}}/taches/1
+
+### Erreur attendue : titre vide (400)
+POST {{api}}/taches
+Content-Type: application/json
+
+{ "titre": "" }
