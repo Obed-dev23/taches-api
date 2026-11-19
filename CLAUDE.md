@@ -21,8 +21,9 @@ Une application de gestion de tâches en trois parties partageant les mêmes don
 
 ## Où on en est
 
-- Outils installés sur sa machine : Node.js, npm, Git, Visual Studio Code.
-- Prochaine étape : cloner le projet sur sa machine et le lancer, puis lire `src/app.ts` ligne par ligne ensemble.
+- Outils installés sur sa machine : Node.js, npm, Git (installé via winget), Visual Studio Code.
+- Fait : projet cloné dans `C:\Users\ntomb\taches-api`, `npm install` et `npm run dev` fonctionnent chez lui.
+- Prochaine étape : ouvrir le projet dans VS Code et lire `src/app.ts` ligne par ligne ensemble.
 - Exercice en attente : ajouter une route `DELETE /taches/:id` en s'inspirant de la route `PATCH`.
 - Ensuite : remplacer le stockage en mémoire par PostgreSQL.
 
